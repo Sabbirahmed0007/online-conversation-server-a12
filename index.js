@@ -2,14 +2,18 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser=require('cookie-parser');
 const jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require ('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000 ;
 
 // middleWares
 
-app.use(cors());
+app.use(cors({
+  origin:['http://localhost:5173', 'http://localhost:5174'],
+  credentials:true
+
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -43,6 +47,10 @@ async function run() {
 
     // User related api-------------------------------------
 
+    app.get('/users', async(req, res)=>{
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    })
     
 
     app.post('/users', async(req, res)=>{
@@ -57,6 +65,7 @@ async function run() {
       res.send(result);
     })
 
+    // update the user role to admin
     app.patch('/users/admin/:id', async(req, res)=>{
       const id= req.params.id;
       const filter = {_id: new ObjectId(id)};
@@ -68,6 +77,14 @@ async function run() {
       const result = await usersCollection.updateOne (filter,updatedDoc);
       res.send(result);
     })
+
+    // to delete the user from the database
+    app.delete('/users/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    })
     
     // -----------------------
     app.get('/tags', async(req, res)=>{
@@ -75,7 +92,23 @@ async function run() {
       res.send(result);
     })
 
-    /// 
+    /// announcements related api -------------
+
+    app.get('/announcements', async(req, res)=>{
+      const result = await announcementsCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.get('/announcementsCount', async(req, res)=>{
+      const count = await announcementsCollection.estimatedDocumentCount();
+      res.send([count]);
+    })
+
+    app.post('/createAnnouncement', async(req, res)=>{
+      const query = req.body;
+      const result = await announcementsCollection.insertOne(query);
+      res.send(result);
+    })
 
 
 
