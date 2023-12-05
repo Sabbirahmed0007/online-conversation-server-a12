@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000 ;
 // middleWares
 
 app.use(cors({
-  origin:['http://localhost:5173', 'http://localhost:5174'],
+  origin:['http://localhost:5173', 'https://online-conversation-project.web.app'],
   credentials:true
 
 }));
@@ -139,7 +139,7 @@ async function run() {
     })
 
     // to delete the user from the database
-    app.delete('/users/:id', async(req, res)=>{
+    app.delete('/users/:id',verifyToken, verifyAdmin, async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await usersCollection.deleteOne(query);
@@ -152,7 +152,7 @@ async function run() {
       res.send(result);
     })
 
-    app.post('/tags', async(req, res)=>{
+    app.post('/tags',verifyToken, verifyAdmin, async(req, res)=>{
       const data = req.body;
       const result = await tagsCollection.insertOne(data);
       res.send(result);
@@ -178,7 +178,7 @@ async function run() {
 
 
     // membership related api
-    app.get('/primiumMemberShip', async(req, res )=>{
+    app.get('/primiumMemberShip',verifyToken, async(req, res )=>{
       const email = req.query.email;
       const query = {email: email};
       const result = await memberShipCollection.find(query).toArray();
@@ -195,7 +195,7 @@ async function run() {
     })
 
     // app.get('/myPosts/:email', async(req, res)=>{
-    app.get('/myPosts/:email', async(req, res)=>{
+    app.get('/myPosts/:email',verifyToken, async(req, res)=>{
       const email = req.query.email;
       // const email = req.params.email;
       const filter = {email: email};
@@ -212,7 +212,7 @@ async function run() {
     })
 
 /// My post s delete
-    app.delete('/myPosts/:id', async(req, res)=>{
+    app.delete('/myPosts/:id',verifyToken, async(req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
       const result = await postCollection.deleteOne(query);
@@ -226,7 +226,7 @@ async function run() {
       res.send({count});
   })
 
-    app.post('/addposts', async(req, res)=>{
+    app.post('/addposts',verifyToken, async(req, res)=>{
       const query = req.body;
       query.createdAt = new Date();
       const result = await postCollection.insertOne(query);
@@ -235,7 +235,7 @@ async function run() {
 
 
     ///// Admin home stats
-    app.get('/adminStats', async(req, res)=>{
+    app.get('/adminStats',verifyToken, verifyAdmin, async(req, res)=>{
       const users = await usersCollection.estimatedDocumentCount();
       const posts = await postCollection.estimatedDocumentCount();
 
